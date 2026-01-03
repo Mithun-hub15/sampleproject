@@ -1,0 +1,1618 @@
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Smart Road - Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"/>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+  <script src="https://unpkg.com/leaflet-heat/dist/leaflet-heat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+  
+
+  <style>
+    body { margin:0; background:#202869; font-family:Arial,sans-serif; color:#ffe170; min-height:100vh;}
+    #dashboard-section { display:flex;border-radius:13px; background:#202869; min-height:100vh;}
+    .sidebar { width:230px; background:#262627; color:#ffe170; border-radius:0 20px 20px 0; min-height:100vh; box-sizing:border-box; display:flex; flex-direction:column; align-items:flex-start; }
+    .sidebar-title { font-size:2.1em; font-weight:bold; margin:35px 0 12px 26px; color:#ffe170;}
+    .sidebar-desc { font-size:1.04em; margin:0 20px 24px 26px; color:#ffe170; font-style:italic; opacity:0.95;}
+    .menu-item { font-size:1.1em; padding:13px 32px; margin-bottom:9px; cursor:pointer;width:100%;border-radius:0 18px 18px 0; background:none; border:none; text-align:left; color:#ffe170;}
+    .menu-item.active, .menu-item:hover { background:#ffe170; color:#262627;}
+    .main-content {flex:1; min-width:300px; padding:16px 6vw 34px 6vw; background:#202869; position:relative;}
+    .heading-gold { font-size:2em; font-weight:bold; color:#ffe170; margin-bottom:10px;}
+    .subheading-gold { font-size:1.13em; color:#ffe170; margin-bottom:14px;font-style:italic;}
+    .btn-primary, .small-btn { background:#22aaf9; color:#fff; border:none; border-radius:9px; padding:13px 21px; font-size:1em; font-weight:bold; cursor:pointer; margin-top:9px;}
+    .btn-primary:hover, .small-btn:hover { background:#1266ba;}
+    input, select, textarea { width:100%; margin-bottom:14px; padding:10px; border-radius:8px; border:1px solid #bbb; font-size:1em; background:#232356; color:#ffe170;}
+    .file-group { display:flex; align-items:center; gap:10px; margin-bottom:14px;}
+    #file-preview img, #file-preview video { max-width:120px; max-height:85px; border-radius:10px;}
+    #leaflet-report-map, #leaflet-live-map, #leaflet-heatmap { height:290px!important;margin-bottom:15px; border-radius:13px;}
+    @media (max-width:900px){ #dashboard-section { flex-direction:column; max-width:100vw; } .sidebar{border-radius:0;} .main-content{padding:13px 2vw 30px 2vw;} }
+    .profile-block, .profile-edit-box { background:#252e4f; border-radius:15px; padding:17px 23px; margin-bottom:20px; color:#ffe170;}
+    .profile-block img, .profile-edit-box img { width:93px; height:93px; object-fit:cover; border-radius:50%; border:2.5px solid #ffe170; margin-bottom:8px;}
+    .media-upload-wrapper { display:flex; align-items:center;}
+    #openCameraBtn { border:none; background:#ffe170; border-radius:0 8px 8px 0; padding:5px 13px; cursor:pointer; font-size:24px; margin-left:2px;}
+    #openCameraBtn:hover { background:#fded97; }
+    #cameraModal { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:#152340ec; z-index:9999; flex-direction:column; justify-content:center; align-items:center; width:100vw; height:100vh;}
+    #cameraVideo { max-width:94vw; max-height:54vh; border-radius:12px; margin-top:25px;}
+    #capturePhotoBtn { margin-top:29px; width:75px; height:75px; border-radius:50%; border:5px solid #ffe170; background:#222c; cursor:pointer; font-size:33px; color:#ffe170; display:flex; align-items:center; justify-content:center;}
+    #closeCameraBtn { position:absolute; top:15px; right:21px; font-size:38px; color:#ffe170; background:transparent; border:none; cursor:pointer;}
+    .badge { background:#ffc107; color:#262627; border-radius:4px; padding:2px 8px;font-weight:bold;}
+    table { width:100%;border-collapse:collapse;background:#252e4f;color:#ffe170;}
+    th,td { padding:8px 8px; border-bottom:1px solid #2a3459;}
+    th { background:#262627;color:#ffe170;}
+    .status-progress { color:#ffd700;}
+    .status-done { color:#65ff88;}
+    .section { display:none;}
+    .section.active { display:block;}
+    .map-tab-btn {
+  border:none; background:#fff;color:#222;
+  border-radius:22px;padding:5px 18px;font-size:1.03em;
+  box-shadow:0 1px 3px #0012;
+  cursor:pointer; transition:.12s;
+  display: flex; align-items: center; gap: 5px;
+}
+.map-tab-btn.active, .map-tab-btn:focus {
+  background: #42aaff; color:#fff;
+  font-weight:bold; outline: 2px solid #188;
+}
+.map-input {
+  background:#232b40; color:#ffe170; border:none; border-radius:8px;padding:7px 13px;font-size:1.04em;
+}
+.map-main-btn { background:#42aaff; color:#fff;padding:9px 20px;border-radius:11px; border:none; font-size:1.07em; font-weight:600;}
+#user-leaflet-map { height:430px; width:100%;}
+ 
+
+#profile-section {
+  max-width: 560px;
+  margin: 46px auto 0 auto;
+  padding: 2px;
+}
+#profile-section h2 {
+  text-align: center;
+  margin-bottom: 23px;
+  color: #183153;
+  font-weight: bold;
+}
+#profile-form label {
+  font-weight: 500;
+  margin-bottom: 2px;
+  color: #18408e;
+}
+#profile-form input, #profile-form select {
+  width: 100%;
+  border-radius: 7px;
+  border: 1.3px solid #bbb;
+  margin-bottom: 13px;
+  padding: 7.5px 10px;
+  font-size: 1em;
+  background: #f6f8fc;
+  color: #222;
+}
+#profile-form input[disabled], #profile-form select[disabled] {
+  background: #eaeef2;
+  color: #888;
+}
+#edit-btn, #save-btn {
+  font-weight: 650;
+  letter-spacing: .03em;
+}
+
+#notifications-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.notification-placeholder,
+.notification-error,
+.no-notifications {
+  padding: 20px;
+  text-align: center;
+  color: #999;
+  font-style: italic;
+}
+
+.notification-error {
+  color: #d32f2f;
+}
+
+.notification-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 15px;
+  margin-bottom: 10px;
+  background: white;
+  border-left: 4px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: all 0.3s;
+}
+
+.notification-item:hover {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  transform: translateX(5px);
+}
+
+.notification-item.success {
+  border-left-color: #28a745;
+}
+
+.notification-item.warning {
+  border-left-color: #ffc107;
+}
+
+.notification-item.info {
+  border-left-color: #17a2b8;
+}
+
+.notif-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.notif-content {
+  flex: 1;
+}
+
+.notif-message {
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.notif-time {
+  font-size: 12px;
+  color: #999;
+}
+
+.notif-dismiss {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  transition: color 0.2s;
+}
+
+.notif-dismiss:hover {
+  color: #333;
+}
+
+@keyframes fadeOut {
+  to { 
+    opacity: 0; 
+    transform: translateX(-20px); 
+  }
+}
+
+.notification-categories {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.notif-filter {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 14px;
+}
+
+.notif-filter.active {
+  background: #21808d;
+  color: white;
+  border-color: #21808d;
+}
+
+.notif-filter:hover:not(.active) {
+  background: #f0f0f0;
+}
+
+.comm-tab-btn {
+  background: #21243b;
+  color: #ffd357;
+  border: none;
+  font-size: 1.12em;
+  padding: 13px 8px;
+  cursor: pointer;
+  font-weight: 600;
+  border-bottom: 3px solid transparent;
+  transition: background 0.15s, color 0.15s, border-color 0.18s;
+}
+.comm-tab-btn.active, .comm-tab-btn:hover {
+  color: #fff;
+  background: #34365a;
+  border-bottom: 3px solid #ffd357;
+}
+
+
+</style>
+</head>
+
+
+
+
+
+
+ 
+
+<body>
+<div id="dashboard-section">
+  <div class="sidebar">
+    <div class="sidebar-title">Smart Road</div>
+    <div class="sidebar-desc">A platform for honest citizens to report, track and solve road issues.<br>Follow golden ethics, help society.<br>Please, be kind!</div>
+    <button class="menu-item active" id="menu-report">Report Issue</button>
+    <button class="menu-item" id="menu-progress">Track Progress</button>
+    <button class="menu-item" id="menu-live">Live Map</button>
+    <button class="menu-item" id="menu-heatmap">Heatmap</button>
+    <button class="menu-item" id="menu-community">Community</button>
+    <button class="menu-item" id="menu-rain">Weather</button>
+    <button class="menu-item" id="menu-notify">Notifications</button>
+    <button class="menu-item" id="menu-sos">SOS Emergency</button>
+    <button class="menu-item" id="menu-profile">Profile</button>
+ 
+    
+  </div>
+  <div class="main-content">
+
+    <!-- Report Issue Section -->
+    <div id="section-report" class="section active">
+      <div class="heading-gold">Report an Issue</div>
+      <div class="subheading-gold">Raise issues to make our roads clean and safe!</div>
+      <form id="reportForm" autocomplete="off">
+        <label for="issue-title">Issue Title*</label>
+        <input id="issue-title" type="text" placeholder="Enter a short title" required />
+
+        <label for="issue-type">Issue Type</label>
+        <select id="issue-type" required>
+          <option>Pothole</option>
+          <option>Waterlogging</option>
+          <option>Unpaved</option>
+          <option>Accident</option>
+          <option>Garbage</option>
+          <option>Streetlight</option>
+          <option>Road Obstruction</option>
+          <option>Other</option>
+        </select>
+
+        <label for="issue-desc">Description</label>
+        <textarea id="issue-desc" placeholder="Optional details"></textarea>
+
+        <label>Mark Issue Location on Map:</label>
+        <div id="leaflet-report-map"></div>
+        <button type="button" class="small-btn" onclick="getLocation()">Use my current location</button>
+        <div id="loc-error"></div>
+        <div id="coords-label"></div>
+        <div id="address-label"></div>
+
+        <div class="media-upload-wrapper" style="margin-bottom:7px;">
+          <button type="button" id="openCameraBtn" title="Camera">📷</button>
+        </div>
+        <div class="file-group">
+          <input type="file" id="issue-media" accept="image/*,video/*" />
+          <span style="color:#ffe170;">Choose file</span>
+        </div>
+        <div id="file-preview"></div>
+
+        <button type="submit" class="btn-primary">Submit Report</button>
+      </form>
+    </div>
+
+    <!-- Track Progress Section -->
+    <div id="section-progress" class="section">
+      <div class="heading-gold">Track Progress</div>
+      <div class="subheading-gold">Status of your submitted issues.</div>
+      <table id="issues-table">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Location</th>
+            <th>Uploaded</th>
+            <th>Image/Video</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- Live Map Section -->
+    <section id="user-section-livemap" class="section active">
+  <h1>Live Map</h1>
+  <div style="display:flex;flex-direction:column;gap:14px;">
+    <div style="display:flex;gap:14px;align-items:center;">
+      <input id="route-start" class="map-input" placeholder="Start: Address or lat,lng" style="flex:2;"/>
+      <button id="my-loc-btn" class="map-main-btn" title="Use your current location" style="padding:8px 13px 8px 13px;margin-left:0">📍</button>
+      <input id="route-end" class="map-input" placeholder="Destination: Address or lat,lng" style="flex:2;"/>
+      <select id="route-mode" class="map-input" style="flex:1;">
+        <option value="car">Car</option>
+        <option value="walk">Walk</option>
+        <option value="bike">Bike</option>
+      </select>
+      <button id="show-route-btn" class="map-main-btn">Show Route</button>
+    </div>
+    <div id="map-category-tabs" style="display:flex; gap:12px;">
+  <button class="map-tab-btn" data-type="petrol">⛽ Petrol Bunk</button>
+  <button class="map-tab-btn" data-type="restaurant">🍴 Restaurant</button>
+ 
+  <button class="map-tab-btn" data-type="hotel">🛏️ Hotels</button>
+  <button class="map-tab-btn" data-type="hospital">🏥 Hospital</button>
+  <button class="map-tab-btn" data-type="pharmacy">💊 Pharmacy</button>
+    </div>
+    <div id="user-map-container" style="border-radius:20px;overflow:hidden;height:430px;min-width:330px;background:#dedede;">
+      <div id="user-leaflet-map" style="height:100%;width:100%;"></div>
+    </div>
+    <div id="map-message" style="color:#fff;font-weight:bold;margin:5px 0 0 3px;"></div>
+  </div>
+</section>
+ 
+     
+
+  <!-- Heatmap Section -->
+<div id="section-heatmap" class="section">
+  <div class="heading-gold">Heatmap - All Road Issues</div>
+  <div class="subheading-gold">Visualize and solve together!</div>
+  <form style="margin-bottom: 18px;">
+    <div style="width:220px; display:grid; grid-template-columns:auto 1fr; row-gap:10px; column-gap:8px; align-items:center;">
+      <input type="checkbox" id="ht-pothole" checked><label for="ht-pothole">Pothole</label>
+      <input type="checkbox" id="ht-waterlogging" checked><label for="ht-waterlogging">Waterlogging</label>
+      <input type="checkbox" id="ht-streetlight" checked><label for="ht-streetlight">Streetlight</label>
+      <input type="checkbox" id="ht-garbage" checked><label for="ht-garbage">Garbage</label>
+      <input type="checkbox" id="ht-unpaved" checked><label for="ht-unpaved">Unpaved</label>
+      <input type="checkbox" id="ht-accident" checked><label for="ht-accident">Accident</label>
+      <input type="checkbox" id="ht-roadobstruction" checked><label for="ht-roadobstruction">Road Obstruction</label>
+      <input type="checkbox" id="ht-other" checked><label for="ht-other">Other</label>
+    </div>
+  </form>
+  <div id="leaflet-heatmap" style="height: 350px; border-radius: 10px; overflow: hidden; min-width:340px"></div>
+</div>
+  
+
+<!-- Community Section -->
+<div id="section-community" class="section" style="margin-top: 32px; max-width: 800px; margin-left:auto; margin-right:auto;">
+  <div style="font-size:2.1em;font-weight:700;color:#ffd357;margin-bottom:18px;">Community</div>
+    <div style="display:flex;align-items:center;gap:18px;">
+      <img id="community-profile-photo" src="default.png" alt="Profile" 
+           style="width:70px;height:70px;border-radius:50%;border:2.5px solid #ffd357;">
+      <div>
+        <div id="community-profile-name" style="font-size:1.2em;font-weight:500;">Name Here</div>
+        <div id="community-profile-email" style="color:#93baf8;font-size:1.03em;">email@example.com</div>
+        <div id="community-profile-dob" style="color:#ffd357;font-size:.99em;font-weight:400;">DOB: yyyy-mm-dd</div>
+      </div>
+    </div>
+    <div style="margin-top:26px;display:grid;grid-template-columns:repeat(4,1fr);gap:2px;">
+      <button class="comm-tab-btn active">Trending</button>
+      <button class="comm-tab-btn">Posts</button>
+      <button class="comm-tab-btn">LeaderBoard</button>
+      <button class="comm-tab-btn">MyPosts</button>
+    </div>
+
+    <div id="community-tab-contents" style="margin-top:32px;">
+      <!-- Tab content will go here step by step -->
+       
+    </div>
+</div>
+
+ 
+
+    
+    
+
+     
+
+
+     
+
+    <!-- Rain Mode Section -->
+    <div id="section-rain" class="section">
+  <div class="heading-gold">Weather</div>
+  <div class="subheading-gold">7-day forecast with hourly prediction (IST, am/pm).</div>
+  <div style="margin-bottom:10px;">
+    <input id="weather-search" type="text" placeholder="Type city (e.g. Mysore)" style="width:300px;max-width:70vw;">
+    <button id="weather-btn" class="small-btn">Get Weather</button>
+  </div>
+  <div id="weather-cards" style="display:flex;flex-wrap:nowrap;overflow-x:auto;gap:18px;"></div>
+  <div id="hourly-details" style="margin-top:20px;"></div>
+</div>
+
+    <!-- Notifications Section -->
+    <div id="section-notify" class="section">
+  <div class="heading-gold">Notifications</div>
+  <div class="subheading-gold">Stay up-to-date on urgent issues.</div>
+  <div id="notify-block">
+    <div class="notification-categories">
+      <button class="notif-filter active" onclick="filterNotifications('all')">All</button>
+      <button class="notif-filter" onclick="filterNotifications('issue')">Issues</button>
+      <button class="notif-filter" onclick="filterNotifications('weather')">Weather</button>
+      <button class="notif-filter" onclick="filterNotifications('community')">Community</button>
+    </div>
+    <ul id="notifications-list">
+      <li class="notification-placeholder">Loading notifications...</li>
+    </ul>
+  </div>
+</div>
+
+    <!-- SOS Section -->
+    <div id="section-sos" class="section">
+      <div class="heading-gold">SOS Emergency</div>
+      <div class="subheading-gold">Safety first, help others.</div>
+      <div class="profile-block">
+        <ul style="font-size:1.07em;">
+          <li>Police: <a href="tel:100">100</a></li>
+          <li>Ambulance: <a href="tel:108">108</a></li>
+          <li>Fire: <a href="tel:101">101</a></li>
+          <li>Toll Emergency: <a href="tel:1033">1033</a></li>
+        </ul>
+        <div style="color:#ffe170;font-weight:bold;">Emergency Guidelines:</div>
+        <ul>
+          <li>Stay calm, move to a safe spot.</li>
+          <li>Contact the service above.</li>
+          <li>Help others if safe.</li>
+          <li>Never spread panic.</li>
+          <li>Report truthfully. You save lives!</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Profile Section -->
+     <section id="section-profile" class="section">
+  <h2>User Profile</h2>
+  <div id="profile-message" style="color:green;display:none;">Profile updated!</div>
+  <form id="profile-form" enctype="multipart/form-data" style="max-width:440px;background:#fff;padding:32px 28px 22px 28px;border-radius:18px;margin:auto;box-shadow:0 3px 34px #0023;">
+    <div style="display:flex; flex-direction:column; align-items:center; margin-bottom:17px;">
+      <img id="profile-photo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Ccircle cx='50' cy='50' r='40' fill='%23ddd'/%3E%3C/svg%3E" style="width:110px;height:110px;object-fit:cover;border-radius:50%;border:2.3px solid #4d9dfb;margin-bottom:10px;"/>
+      <input type="file" id="profile-upload" accept="image/*" style="display:none;" />
+      <button type="button" id="edit-photo-btn" style="margin-top:4px;background:none;color:#4d9dfb;font-weight:600;border:none;cursor:pointer;">Edit Photo</button>
+    </div>
+    <div>
+      <label>Name:</label>
+      <input type="text" id="profile-name" class="profile-input" disabled />
+    </div>
+    <div>
+      <label>DOB:</label>
+      <input type="date" id="profile-dob" class="profile-input" disabled />
+      <span id="profile-age" style="margin-left:175px;"></span>
+    </div>
+    <div>
+      <label>Gender:</label>
+      <select id="profile-gender" class="profile-input" disabled>
+        <option value="">Select gender</option>
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+    <div>
+      <label>Email:</label>
+      <input type="email" id="profile-email" class="profile-input" disabled />
+    </div>
+    <div>
+      <label>Phone:</label>
+      <input type="text" id="profile-phone" class="profile-input" disabled />
+    </div>
+    <button type="button" id="edit-btn" style="margin-top:18px;width:100%;background:#3a7bea;color:#fff; font-size:1.1em;border-radius:8px;border:none;padding:13px 0;">Edit Profile</button>
+    <button type="submit" id="save-btn" style="display:none;margin-top:18px;width:100%;background:#1ec38a;color:#fff; font-size:1.1em;border-radius:8px;border:none;padding:13px 0;">Save Profile</button>
+  </form>
+</section>
+  </div>
+<!-- Camera modal -->
+<div id="cameraModal">
+  <video id="cameraVideo" autoplay playsinline></video>
+  <button id="capturePhotoBtn" title="Capture Photo">&#9679;</button>
+  <button id="closeCameraBtn" title="Close Camera">&times;</button>
+</div>
+<script>
+  // --- Persistence ---
+  function saveIssues() {localStorage.setItem('smartroad-issues', JSON.stringify(issues));}
+  function loadIssues() {let d = localStorage.getItem('smartroad-issues');issues = d ? JSON.parse(d) : [];}
+  function saveCommunity() {localStorage.setItem('smartroad-community', JSON.stringify(communityPosts));}
+  function loadCommunity() {let d = localStorage.getItem('smartroad-community');communityPosts = d ? JSON.parse(d) : [];}
+  // --- Navigation ---
+  const sections = ["report","progress","live","heatmap","community",,"rain","notify","sos","profile"];
+  sections.forEach(s => {
+    document.getElementById("menu-"+s).onclick=function(){
+      document.querySelectorAll('.section').forEach(sec=>sec.classList.remove('active'));
+      document.querySelectorAll('.menu-item').forEach(mi=>mi.classList.remove('active'));
+      document.getElementById('section-'+s).classList.add('active');
+      this.classList.add('active');
+      if(s==='progress') renderIssuesTable();
+      if(s==='heatmap') renderHeatmap();
+      if(s==='live') renderLiveMap();
+      if(s==='community') renderCommunity();
+      if(s==='rain') renderWeather();
+    }
+  });
+  // Camera/file upload
+  const cameraModal = document.getElementById('cameraModal');
+  const cameraVideo = document.getElementById('cameraVideo');
+  let cameraStream;
+  document.getElementById("openCameraBtn").onclick = async function () {
+    cameraModal.style.display = 'flex';
+    try {
+      cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+      cameraVideo.srcObject = cameraStream;
+      cameraVideo.play();
+    } catch (err) {
+      cameraModal.style.display = 'none';
+      alert(`Could not access camera: ${err.message}`);
+    }
+  };
+  document.getElementById('capturePhotoBtn').onclick = function(){
+    if(!cameraStream) return;
+    const canvas = document.createElement('canvas');
+    canvas.width = cameraVideo.videoWidth;
+    canvas.height = cameraVideo.videoHeight;
+    canvas.getContext('2d').drawImage(cameraVideo,0,0);
+    document.getElementById('file-preview').innerHTML = `<img src="${canvas.toDataURL('image/png')}" style="max-width:115px; border-radius:9px; max-height:85px;" alt="Captured"/>`;
+    stopCamera(); cameraModal.style.display='none';
+    window.capturedPhotoData = canvas.toDataURL('image/png');
+  }
+  document.getElementById('closeCameraBtn').onclick = function(){ stopCamera(); cameraModal.style.display='none'; }
+  function stopCamera(){if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());} cameraStream=null;cameraVideo.srcObject=null;}
+  document.getElementById("issue-media").onchange = function(e){
+    const file = e.target.files[0];
+    const preview=document.getElementById("file-preview");
+    preview.innerHTML="";
+    if(!file) return;
+    if(file.type.startsWith("image")){
+      const reader=new FileReader();
+      reader.onload=ev=>{preview.innerHTML=`<img src="${ev.target.result}" style="max-width:115px; border-radius:9px; max-height:85px;" alt="Photo" />`;};
+      reader.readAsDataURL(file);
+    }
+    else if(file.type.startsWith("video")){
+      const reader=new FileReader();
+      reader.onload=ev=>{preview.innerHTML=`<video controls style="max-width:116px; border-radius:9px; max-height:86px;"><source src="${ev.target.result}" type="${file.type}"></video>`;}
+      reader.readAsDataURL(file);
+    }
+    else {preview.textContent="Unsupported file.";}
+  };
+  // --- Profile logic ---
+   // Simulate fetching user profile data
+  // ✅ FIXED: Changed photo to inline SVG instead of missing file
+  
+const USERNAME = localStorage.getItem("username");
+let profileData = {};
+
+// Always load latest from backend
+function refreshProfile() {
+  fetch(`http://localhost:3300/api/profile/${USERNAME}`)
+    .then(res => res.json())
+    .then(data => {
+      profileData = data || {};
+      fillProfileForm();
+      fillCommunity();
+    })
+    .catch(() => {
+      profileData = {};
+      fillProfileForm();
+      fillCommunity();
+    });
+}
+
+// Fill fields with current profile data
+function fillProfileForm() {
+  document.getElementById("profile-photo").src = profileData.photo || "default.png";
+  document.getElementById("profile-name").value = profileData.name || "";
+  document.getElementById("profile-dob").value = profileData.dob || "";
+  document.getElementById("profile-gender").value = profileData.gender || "";
+  document.getElementById("profile-email").value = profileData.email || "";
+  document.getElementById("profile-phone").value = profileData.phone || "";
+  document.getElementById("profile-age").textContent = profileData.dob ? `Age: ${getAge(profileData.dob)}` : "";
+}
+
+// Sync community card every time
+function fillCommunity() {
+  document.getElementById("community-profile-photo").src = profileData.photo || "default.png";
+  document.getElementById("community-profile-name").textContent = profileData.name || "";
+  document.getElementById("community-profile-email").textContent = profileData.email || "";
+  document.getElementById("community-profile-dob").textContent = "DOB: " + (profileData.dob || "");
+}
+
+function getAge(dob) {
+  if (!dob) return "";
+  let diff = Date.now() - new Date(dob).getTime();
+  return Math.floor(diff / 31556952000);
+}
+
+document.getElementById("edit-btn").onclick = function() {
+  document.querySelectorAll(".profile-input").forEach(i => i.disabled = false);
+  document.getElementById("profile-upload").style.display = "block";
+  document.getElementById("save-btn").style.display = "";
+  document.getElementById("edit-btn").style.display = "none";
+};
+
+document.getElementById("profile-form").onsubmit = function(e) {
+  e.preventDefault();
+  // Get latest values
+  profileData.name = document.getElementById("profile-name").value;
+  profileData.dob = document.getElementById("profile-dob").value;
+  profileData.gender = document.getElementById("profile-gender").value;
+  profileData.email = document.getElementById("profile-email").value;
+  profileData.phone = document.getElementById("profile-phone").value;
+
+  document.querySelectorAll(".profile-input").forEach(i => i.disabled = true);
+  document.getElementById("profile-upload").style.display = "none";
+  document.getElementById("save-btn").style.display = "none";
+  document.getElementById("edit-btn").style.display = "";
+  // Save to backend
+  fetch(`http://localhost:3300/api/profile/${USERNAME}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(profileData)
+  })
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById("profile-message").style.display = "";
+      setTimeout(() => {
+        document.getElementById("profile-message").style.display = "none";
+      }, 2000);
+      refreshProfile(); // Pull latest after save
+    });
+};
+
+document.getElementById("edit-photo-btn").onclick = function() {
+  document.getElementById("profile-upload").click();
+};
+
+document.getElementById("profile-upload").onchange = function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    document.getElementById("profile-photo").src = evt.target.result;
+    profileData.photo = evt.target.result;
+  };
+  reader.readAsDataURL(file);
+};
+
+// Always load latest profile when page loads
+window.addEventListener("DOMContentLoaded", refreshProfile);
+
+// --- Optional: Community tabs, no errors ---
+// --- COMMUNITY TABS, REAL LOGIC ---
+
+// Handles fetching and displaying each tab’s real content
+function fetchCommunityTab(tab) {
+  let url = "";
+  if (tab === "Trending") url = "/api/community/trending";
+  else if (tab === "Posts") url = "/api/community/posts";
+  else if (tab === "LeaderBoard") url = "/api/community/leaderboard";
+  else if (tab === "MyPosts") url = `/api/community/myposts/${USERNAME}`;
+  fetch(url)
+    .then(res => res.json())
+    .then(data => renderCommunityTab(tab, data))
+    .catch(() => renderCommunityTab(tab, []));
+}
+
+// Render each tab with backend data
+function renderCommunityTab(tab, data) {
+  let html = "";
+  if (tab === "Trending") {
+    html = data.length ? data.map(item =>
+      `<div style="margin-bottom:14px;">
+        <b>${item.title}</b> <span style="color:#ffd357;font-size:.95em;">by ${item.user}</span>
+      </div>`
+    ).join('') : "<i>No trending posts yet!</i>";
+  } 
+  else if (tab === "Posts") {
+    html = data.length ? data.map(item =>
+      `<div style="background:#232356;border-radius:12px;padding:13px 18px 12px;margin-bottom:17px;">
+        <div style="display:flex;align-items:center;gap:13px;">
+          <img src='${item.userPhoto||"default.png"}' style="width:46px;height:46px;border-radius:50%;border:1.2px solid #ffd357;">
+          <div>
+            <b>${item.userName||item.user}</b>
+            <div style="color:#ffd357;font-size:.96em;">${item.time||""}</div>
+          </div>
+        </div>
+        <div style="margin-top:6px;">${item.title}</div>
+        <div style="color:#93baf8;font-size:1.03em;">${item.desc||""}</div>
+      </div>`
+    ).join('') : "<i>No posts yet!</i>";
+  } 
+  else if (tab === "LeaderBoard") {
+    html = data.length ? data.map(entry =>
+      `<div style="margin-bottom:13px;display:flex;align-items:center;gap:11px;">
+        <img src='${entry.userPhoto||"default.png"}' style="width:33px;height:33px;border-radius:50%;border:1.2px solid #ffd357;">
+        <b>${entry.user}</b>
+        <span style="color:#22ff9b;">${entry.score} pts</span>
+        ${entry.badge ? `<span class="badge">${entry.badge}</span>` : ""}
+      </div>`
+    ).join('') : "<i>No leaderboard entries!</i>";
+  } 
+  else if (tab === "MyPosts") {
+    html = data.length ? data.map(post =>
+      `<div style="background:#263075;border-radius:12px;padding:13px 16px 10px;margin-bottom:15px;">
+        <div style="display:flex;align-items:center;gap:11px;">
+          <img src='${post.userPhoto||"default.png"}' style="width:41px;height:41px;border-radius:50%;border:1px solid #ffd357;">
+          <b>${post.userName||post.user}</b>
+          <span style="color:#ffd357;font-size:.95em;margin-left:8px;">${post.time||""}</span>
+        </div>
+        <div style="margin-top:4px;font-size:1.08em;">${post.title}</div>
+        <div style="color:#bacfff;font-size:.98em;margin-bottom:2px;">${post.desc||""}</div>
+      </div>`
+    ).join('') : "<i>You haven't posted anything yet!</i>";
+  }
+  document.getElementById('community-tab-contents').innerHTML = html;
+}
+
+// Setup community tabs event listeners
+document.querySelectorAll('.comm-tab-btn').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.comm-tab-btn').forEach(b => b.classList.remove("active"));
+    btn.classList.add('active');
+    fetchCommunityTab(btn.textContent.trim());
+  };
+});
+// Show Trending tab on page load
+window.addEventListener("DOMContentLoaded", function() {
+  fetchCommunityTab("Trending");
+});
+
+
+
+
+   
+  // --- MAP & HEATMAP ---
+  let currLatLng = null, reportMap, reportMarker;
+  function initReportMap() {
+    if(window.reportMap && window.reportMap.remove) window.reportMap.remove();
+    reportMap = L.map("leaflet-report-map").setView([12.9716, 77.5946], 13);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 20 }).addTo(reportMap);
+    reportMap.on("click", e => {
+      currLatLng = { lat: e.latlng.lat, lng: e.latlng.lng };
+      placeReportMarker(currLatLng.lat, currLatLng.lng);updateCoordsLabel();fetchAddress();
+    });
+  }
+  function placeReportMarker(lat, lng) {
+    if (reportMarker) reportMap.removeLayer(reportMarker);
+    reportMarker = L.marker([lat, lng]).addTo(reportMap);
+  }
+  function getLocation() {
+    document.getElementById("loc-error").textContent = "";
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        pos => {currLatLng = { lat: pos.coords.latitude, lng: pos.coords.longitude };placeReportMarker(currLatLng.lat, currLatLng.lng);reportMap.setView([currLatLng.lat, currLatLng.lng], 15);updateCoordsLabel();fetchAddress();},
+        showError,{ enableHighAccuracy: true, timeout: 10000 }
+      );
+    } else { document.getElementById("loc-error").textContent = "Geolocation not supported."; }
+  }
+  function updateCoordsLabel() {
+    const label = document.getElementById("coords-label");
+    if (currLatLng && currLatLng.lat && currLatLng.lng)
+      label.innerHTML = `📍 <span style="color:#ffe170;">Latitude: ${currLatLng.lat.toFixed(6)}, Longitude: ${currLatLng.lng.toFixed(6)}</span>`;
+    else label.innerHTML = "";
+  }
+  function fetchAddress() {
+    if (!currLatLng) return;
+    const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${currLatLng.lat}&lon=${currLatLng.lng}`;
+    fetch(url)
+      .then(resp => resp.json())
+      .then(data => {
+        document.getElementById("address-label").textContent =
+          data && data.display_name ? `Address: ${data.display_name}` : "Address not found";
+      })
+      .catch(() => {
+        document.getElementById("address-label").textContent = "Failed to fetch address";
+      });
+  }
+  function showError(error) {
+    let msg;
+    switch (error.code) {
+      case error.PERMISSION_DENIED: msg = "User denied geolocation."; break;
+      case error.POSITION_UNAVAILABLE: msg = "Location information unavailable."; break;
+      case error.TIMEOUT: msg = "Location request timed out."; break;
+      default: msg = "Unknown error."; break;
+    }
+    document.getElementById("loc-error").textContent = msg;
+  }
+  document.getElementById("reportForm").onsubmit = async function (event) {
+  event.preventDefault();
+  if (!currLatLng) {
+    document.getElementById("loc-error").textContent = "Select location on map!";
+    return;
+  }
+  const title = document.getElementById("issue-title").value.trim();
+  const type = document.getElementById("issue-type").value;
+  const desc = document.getElementById("issue-desc").value.trim();
+  const mediaFile = document.getElementById("issue-media").files[0];
+  let mediaUrl = null, mediaType = "", imageData = "";
+
+  // Handle image (file or camera)
+  if (mediaFile && mediaFile.type.startsWith("image")) {
+    const reader = new FileReader();
+    await new Promise(resolve => {
+      reader.onload = e => { imageData = e.target.result; resolve(); };
+      reader.readAsDataURL(mediaFile);
+    });
+    mediaType = "image";
+    mediaUrl = imageData;
+  } else if (window.capturedPhotoData) {
+    imageData = window.capturedPhotoData;
+    mediaType = "image";
+    mediaUrl = imageData;
+  } else if (mediaFile && mediaFile.type.startsWith("video")) {
+    mediaType = "video";
+    // If you want to support video, add upload logic here
+    mediaUrl = URL.createObjectURL(mediaFile);
+    imageData = ""; // Not used for video here
+  }
+
+  const now = new Date();
+  // Update local UI (as before)
+  issues.unshift({ title, type, status: "In Progress", lat: currLatLng.lat, lng: currLatLng.lng, desc, mediaUrl, mediaType, time: now.toLocaleString() });
+  saveIssues();
+
+  // Send to backend
+  await fetch('http://localhost:3300/api/report', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      title, type, desc,
+      lat: currLatLng.lat,
+      lng: currLatLng.lng,
+      status: 'In Progress',
+      mediaType,
+      imageData // only if image, can be empty for video/other
+    })
+  });
+
+  document.getElementById("reportForm").reset();
+  currLatLng = null;
+  updateCoordsLabel();
+  document.getElementById("address-label").textContent = "";
+  if (reportMarker) { reportMap.removeLayer(reportMarker); reportMarker = null;}
+  document.getElementById("file-preview").innerHTML = "";
+  window.capturedPhotoData = null;
+  alert("Issue reported!");
+  renderIssuesTable();
+  renderHeatmap();
+};
+
+  // Track Progress Table
+function renderIssuesTable() {
+  let tbody = document.querySelector("#issues-table tbody");
+  
+  if (!issues || issues.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">No issues reported yet</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = issues.map(issue => {
+    // ✅ Check if issue was just resolved (only if showNotification exists)
+    if (issue.status === 'Resolved' && !issue.notificationShown && typeof showNotification === 'function') {
+      showNotification(`✅ Your issue "${issue.title}" has been resolved!`, 'success');
+      issue.notificationShown = true;
+    }
+    
+    // ✅ Determine status class and display
+    let statusClass = 'status-progress';
+    let statusIcon = '';
+    
+    if (issue.status === 'Resolved' || issue.status === 'Done') {
+      statusClass = 'status-done';
+      statusIcon = ' ✅';
+    } else if (issue.status === 'In Progress') {
+      statusClass = 'status-progress';
+      statusIcon = ' 🔧';
+    } else if (issue.status === 'Pending') {
+      statusClass = 'status-pending';
+      statusIcon = ' ⏳';
+    }
+    
+    return `
+      <tr>
+        <td>${issue.title || 'Untitled'}</td>
+        <td>${issue.type || 'Other'}</td>
+        <td class="${statusClass}">
+          ${issue.status || 'Pending'}${statusIcon}
+        </td>
+        <td>
+          ${issue.lat && issue.lng 
+            ? `<a class="gmap-link" href="https://www.google.com/maps?q=${issue.lat},${issue.lng}" target="_blank">
+                 ${issue.lat.toFixed(6)},${issue.lng.toFixed(6)}
+               </a>`
+            : '—'
+          }
+        </td>
+        <td>${issue.time || new Date().toLocaleString()}</td>
+        <td>
+          ${
+            issue.mediaType === "image" && issue.mediaUrl && issue.mediaUrl.startsWith('http')
+              ? `<img src="${issue.mediaUrl}" 
+                      style="max-width:58px; max-height:38px; border-radius:5px;" 
+                      alt="Photo" 
+                      onerror="this.style.display='none'; this.parentElement.innerHTML='❌';">`
+              : issue.mediaType === "video" && issue.mediaUrl
+                ? `<button onclick="window.open('${issue.mediaUrl}', '_blank')">📹 Video</button>`
+                : "—"
+          }
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+ 
+   
+  // Heatmap
+  function renderHeatmap(){
+    const container = document.getElementById("leaflet-heatmap");
+    container.innerHTML = "";
+    if(window.heatMap && window.heatMap.remove){ window.heatMap.off(); window.heatMap.remove(); }
+    heatMap = L.map(container).setView([12.9716, 77.5946], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(heatMap);
+    function getDemoLoc(){return [[12.97,77.59,0.7],[12.9716,77.5946,0.7],[12.972,77.591,0.7],[12.968,77.59,0.7]];}
+    const typeChecks = {
+      Pothole: document.getElementById("ht-pothole").checked,
+      Waterlogging: document.getElementById("ht-waterlogging").checked,
+      Streetlight: document.getElementById("ht-streetlight").checked,
+      Garbage: document.getElementById("ht-garbage").checked
+    };
+    const heatPoints = issues.filter(i=>typeChecks[i.type]).map(i=>[i.lat,i.lng,0.7]);
+    const points = heatPoints.length ? heatPoints : getDemoLoc();
+    L.heatLayer(points, {minOpacity:0.5, max:1.0, radius:24, gradient:{0.1:"blue",0.3:"green",0.5:"yellow",0.7:"orange",1.0:"red"}}).addTo(heatMap);
+  }
+  document.getElementById("ht-pothole").onchange = renderHeatmap;
+  document.getElementById("ht-waterlogging").onchange = renderHeatmap;
+  document.getElementById("ht-streetlight").onchange = renderHeatmap;
+  document.getElementById("ht-garbage").onchange = renderHeatmap;
+ 
+  
+  const wxIcons = {
+  0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️', 45: '🌫️', 48: '🌫️',
+  51: '🌦️', 53: '🌦️', 55: '🌦️', 61: '🌧️', 63: '🌧️', 65: '🌧️',
+  80: '🌧️', 81: '🌧️', 82: '🌧️', 71: '❄️', 73:'❄️', 75:'❄️', 77:'❄️',
+  95: '⛈️', 96:'⛈️', 99:'⛈️'
+};
+function wxIcon(code) { return wxIcons[code] || '❔'; }
+function getDay(str) { let d=new Date(str); return d.toLocaleDateString('en-IN',{weekday:'short'})+" "+(d.getDate()<10?"0":"")+d.getDate()+"-"+(d.getMonth()+1); }
+function ampm(hr) { let h=(+hr); return h==0?"12 am":h<12?(h+" am"):(h==12?"12 pm":((h-12)+" pm")); }
+
+async function renderWeather() {
+  document.getElementById('weather-cards').innerHTML = "<i>Loading forecast...</i>";
+  let place = document.getElementById('weather-search').value.trim() || "Bangalore";
+  let geo = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(place)}`).then(r=>r.json());
+  if(!geo[0]) { document.getElementById('weather-cards').innerHTML = "City not found."; return; }
+  let lat=geo[0].lat, lon=geo[0].lon;
+  let url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum&hourly=temperature_2m,precipitation,weathercode&forecast_days=7&timezone=Asia/Kolkata`;
+  let data = await fetch(url).then(r=>r.json());
+  let d = data.daily, n = d.time.length, cards = "";
+  for(let i=0; i<n; ++i) {
+    cards += `<div class="weather-day-card" onclick="showHourly(${i})" style="cursor:pointer;background:#22aaf9;padding:15px 20px;border-radius:14px;font-size:1.1em;color:#fff;min-width:150px;text-align:center;box-shadow:0 2px 8px #0002;">
+      <div style="font-size:2em;">${wxIcon(d.weathercode[i])}</div>
+      <div style="margin:3px 0;font-weight:bold;">${getDay(d.time[i])}</div>
+      <div style="font-size:1.2em;">${d.temperature_2m_max[i]}° / ${d.temperature_2m_min[i]}°</div>
+      <div>Rain: ${d.precipitation_sum[i]}mm</div>
+    </div>`;
+  }
+  document.getElementById('weather-cards').innerHTML = cards;
+  window._wx_data = data;
+  document.getElementById('hourly-details').innerHTML = "<i>Click any day for hourly prediction.</i>";
+}
+document.getElementById("weather-btn").onclick = renderWeather;
+
+window.showHourly = function(dayIx) {
+  const d = window._wx_data, day = d.daily.time[dayIx];
+  let out = `<div style="font-weight:bold;font-size:1.08em;margin-bottom:8px;">Hourly for ${getDay(day)}</div>
+    <div style="display:flex;overflow-x:auto;gap:9px;">`;
+  for(let i=0; i<d.hourly.time.length; i++) {
+    if(d.hourly.time[i].startsWith(day)) {
+      let hr = d.hourly.time[i].slice(11,13);
+      out += `<div style="background:#252e4f;color:#ffe170;border-radius:10px;padding:8px 10px;min-width:64px;text-align:center;">
+        <div style="font-size:1.2em;">${wxIcon(d.hourly.weathercode[i])}</div>
+        <div>${ampm(hr)}</div>
+        <div>${Math.round(d.hourly.temperature_2m[i])}°C</div>
+        <div style="font-size:.95em;">${d.hourly.precipitation[i]}mm</div>
+      </div>`;
+    }
+  }
+  out += "</div>";
+  document.getElementById("hourly-details").innerHTML = out;
+};
+ 
+let userMapInstance = null, routingControl = null, poiMarkers = [];
+const markerIcons = [
+  "https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-green.png", // Start
+  "https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-red.png"    // End
+];
+
+// IMPORTANT: Update these paths as required for your deployment
+const poiIcons = {
+  petrol:    "/icons/petrol bunk.jpg",
+  restaurant:"/icons/resturant.jpg",
+  hotel:     "/icons/Hotel.jpg",
+  hospital:  "/icons/hospital.jpg",
+  pharmacy:  "/icons/pharmacy.png",
+  garage:    "/icons/garage.png"
+};
+
+async function geocodePlace(query) {
+  if(!query) return null;
+  let parts = query.split(',');
+  if(parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) return {lat: parseFloat(parts[0]), lon: parseFloat(parts[1])};
+  let res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`).then(r=>r.json()).catch(()=>null);
+  if(res && res[0]) return {lat: +res[0].lat, lon: +res[0].lon};
+  return null;
+}
+
+function setMapMessage(msg, error=false){
+  let el = document.getElementById('map-message');
+  el.textContent = msg || '';
+  el.style.color = error ? '#ff4e4e' : '#ffe170';
+}
+
+function clearPOIMarkers(){
+  poiMarkers.forEach(m=>userMapInstance && userMapInstance.removeLayer(m));
+  poiMarkers = [];
+}
+
+function clearRoute(){
+  if(routingControl){
+    userMapInstance.removeControl(routingControl);
+    routingControl = null;
+  }
+}
+
+function renderLiveMap(){
+  if(userMapInstance && userMapInstance.remove){
+    userMapInstance.off(); userMapInstance.remove(); userMapInstance = null;
+  }
+  document.getElementById('user-leaflet-map').innerHTML = "";
+  clearPOIMarkers(); clearRoute();
+  userMapInstance = L.map('user-leaflet-map').setView([20.59, 78.96], 5);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    { attribution: '&copy; OpenStreetMap contributors' }).addTo(userMapInstance);
+  setMapMessage('Enter start & destination, then search for a route.');
+  setupTabHandlers();
+}
+
+function showRouteManual(start, end, mode){
+  clearPOIMarkers(); clearRoute();
+  setMapMessage('Loading route...', false);
+
+  routingControl = L.Routing.control({
+    waypoints: [L.latLng(start.lat, start.lon), L.latLng(end.lat, end.lon)],
+    routeWhileDragging: false, addWaypoints: false, draggableWaypoints: false, show:true,
+    lineOptions: {styles: [{color: '#2196f3', weight: 7}]},
+    router: L.Routing.osrmv1({profile: mode || 'car'}),
+    createMarker: (i, wp) => L.marker(wp.latLng, {
+      icon: L.icon({
+        iconUrl: markerIcons[i] || markerIcons[0],
+        iconSize: [25,41], iconAnchor:[12,41], popupAnchor: [0, -30],
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'
+      })
+    }).bindPopup(i === 0 ? 'Start' : 'Destination')
+  }).on('routesfound', e => {
+    const r = e.routes[0];
+    setMapMessage(`Distance: ${(r.summary.totalDistance/1000).toFixed(2)} km, ETA: ${Math.round(r.summary.totalTime/60)} min.`, false);
+  }).on('routingerror', () => setMapMessage('Error finding route.', true))
+  .addTo(userMapInstance);
+}
+
+async function fetchOSMPOIs(type, lat, lon, radius=3000){
+  const tags = {
+    petrol: 'amenity=fuel',
+    restaurant: 'amenity=restaurant',
+    hotel: 'tourism=hotel',
+    hospital: 'amenity=hospital',
+    pharmacy: 'amenity=pharmacy',
+    garage: 'amenity=car_repair'
+  };
+  const tag = tags[type];
+  if(!tag) return [];
+  const query = `[out:json][timeout:25];node[${tag}](around:${radius},${lat},${lon});out;`;
+  const url = 'https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(query);
+
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    return (data.elements || []).map(e => ({
+      lat: e.lat,
+      lon: e.lon,
+      name: e.tags && e.tags.name ? e.tags.name : 'Unknown'
+    }));
+  } catch (err){
+    console.error('Overpass API error:', err);
+    return [];
+  }
+}
+
+async function showPOIs(type){
+  clearRoute(); clearPOIMarkers();
+  if(!userMapInstance){
+    setMapMessage('Map not initialized', true);
+    return;
+  }
+  const center = userMapInstance.getCenter();
+  setMapMessage(`Searching nearby ${type}s...`, false);
+  const pois = await fetchOSMPOIs(type, center.lat, center.lng);
+
+  if(pois.length === 0){
+    setMapMessage(`No nearby ${type}s found.`, true);
+    return;
+  }
+  setMapMessage(`Showing ${pois.length} nearby ${type}s.`, false);
+
+pois.forEach(poi => {
+  let marker = L.marker([poi.lat, poi.lon], {
+    icon: L.icon({
+      iconUrl: poiIcons[type],
+      iconSize: [36, 36],
+      iconAnchor: [18, 36]
+    })
+  }).addTo(userMapInstance)
+    .bindPopup(
+      `<b>${poi.name}</b><br/>
+       <a href="https://www.google.com/maps/?q=${poi.lat},${poi.lon}" target="_blank" style="color:#1976d2;text-decoration:underline;">
+         Open in Google Maps
+       </a>`
+    );
+  poiMarkers.push(marker);
+});
+} 
+
+function setupTabHandlers(){
+  document.querySelectorAll('.map-tab-btn').forEach(btn=>{
+    btn.onclick = function(){
+      if(this.classList.contains('active')){
+        document.querySelectorAll('.map-tab-btn').forEach(b => b.classList.remove('active'));
+        setMapMessage('Enter start & destination, then search for a route.', false);
+        clearPOIMarkers(); clearRoute();
+        return;
+      }
+      document.querySelectorAll('.map-tab-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      showPOIs(this.dataset.type);
+    };
+  });
+
+  document.getElementById('show-route-btn').onclick = async function(){
+    document.querySelectorAll('.map-tab-btn').forEach(b=>b.classList.remove('active'));
+    let startText = document.getElementById('route-start').value.trim();
+    let endText = document.getElementById('route-end').value.trim();
+    let mode = document.getElementById('route-mode').value || 'car';
+    if(!startText||!endText){
+      setMapMessage('Please enter both start and destination.', true);
+      return;
+    }
+    setMapMessage('Finding locations...', false);
+    let from = await geocodePlace(startText), to = await geocodePlace(endText);
+    if(!from||!to){
+      setMapMessage('Could not resolve the addresses/coordinates.', true);
+      return;
+    }
+    showRouteManual(from, to, mode);
+  };
+
+  document.getElementById('my-loc-btn').onclick = function(){
+    setMapMessage('Locating...', false);
+    navigator.geolocation.getCurrentPosition(
+      pos => { 
+        document.getElementById('route-start').value = `${pos.coords.latitude},${pos.coords.longitude}`;
+        setMapMessage('Location filled. Press "Show Route" to search.', false);
+        userMapInstance.setView([pos.coords.latitude, pos.coords.longitude], 15);
+      },
+      () => setMapMessage('Failed to get location.', true),
+      { enableHighAccuracy:true, timeout:7000 }
+    );
+  };
+
+  if(userMapInstance){
+    userMapInstance.on('moveend', ()=>{
+      let activeTab = document.querySelector('.map-tab-btn.active');
+      if(activeTab){
+        showPOIs(activeTab.dataset.type);
+      }
+    });
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  const liveMapSection = document.getElementById('user-section-livemap');
+  if(liveMapSection && liveMapSection.classList.contains('active')){
+    renderLiveMap();
+  }
+  const menuLiveBtn = document.getElementById('menu-live');
+  if(menuLiveBtn){
+    menuLiveBtn.onclick = function(){
+      document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+      document.querySelectorAll('.menu-item').forEach(mi => mi.classList.remove('active'));
+      document.getElementById('user-section-livemap').classList.add('active');
+      this.classList.add('active');
+      renderLiveMap();
+    }
+  }
+});
+
+function updateNotificationCount() {
+  const resolvedCount = issues.filter(i => i.status === 'Resolved').length;
+  document.getElementById('notif-count').textContent = resolvedCount;
+}
+
+
+
+// Sample preset users (extend with database/backend later)
+const users = [
+  { username: "admin", password: "admin123", type: "admin" },
+  { username: "citizen", password: "road2025", type: "user" }
+];
+
+ 
+// ✅ ADD THIS FUNCTION - Fetch issues from server
+async function loadIssuesFromServer() {
+  try {
+    const response = await fetch('http://localhost:3300/api/reports');
+    const data = await response.json();
+    issues = data; // Update global issues array
+    console.log('Loaded issues from server:', issues.length);
+    renderIssuesTable(); // Re-render table with real data
+  } catch (error) {
+    console.error('Failed to load issues:', error);
+    issues = []; // Fallback to empty array
+  }
+}
+
+// ===== NOTIFICATION SYSTEM =====
+
+// Global variable to store notifications
+let allNotifications = [];
+let currentFilter = 'all';
+
+// ✅ Main function to render notifications
+async function renderNotifications() {
+  const notifList = document.getElementById('notifications-list');
+  
+  if (!notifList) {
+    console.error('Notification list element not found');
+    return;
+  }
+  
+  notifList.innerHTML = '<li class="notification-placeholder">Loading notifications...</li>';
+  
+  // Load issues from server
+  let serverIssues = [];
+  try {
+    const response = await fetch('http://localhost:3300/api/reports');
+    if (!response.ok) throw new Error('Server returned ' + response.status);
+    serverIssues = await response.json();
+    console.log('Loaded issues for notifications:', serverIssues.length);
+  } catch (error) {
+    console.error('Could not load issues for notifications:', error);
+    notifList.innerHTML = '<li class="notification-error">⚠️ Could not load notifications. Server may be offline.</li>';
+    return;
+  }
+  
+  allNotifications = [];
+  
+  // 1. ✅ Issue Status Updates (Resolved issues)
+  const resolvedIssues = serverIssues.filter(i => i.status === 'Resolved').slice(-3).reverse();
+  resolvedIssues.forEach(issue => {
+    allNotifications.push({
+      type: 'issue',
+      icon: '✅',
+      message: `Issue resolved: ${issue.title || 'Road issue'} - ${issue.type || 'General'}`,
+      time: getTimeAgo(issue.id),
+      priority: 'success'
+    });
+  });
+  
+  // 2. ✅ In Progress Issues
+  const inProgressIssues = serverIssues.filter(i => i.status === 'In Progress').slice(-2).reverse();
+  inProgressIssues.forEach(issue => {
+    allNotifications.push({
+      type: 'issue',
+      icon: '🔧',
+      message: `Work in progress: ${issue.title || 'Road issue'} - ${issue.type || 'General'}`,
+      time: getTimeAgo(issue.id),
+      priority: 'info'
+    });
+  });
+  
+  // 3. ✅ Weather Alerts
+  const weatherAlerts = getWeatherAlerts();
+  allNotifications.push(...weatherAlerts);
+  
+  // 4. ✅ Community Trends
+  const trendingData = getMostReportedIssue(serverIssues);
+  if (trendingData && trendingData.count > 1) {
+    allNotifications.push({
+      type: 'community',
+      icon: '📊',
+      message: `Trending: ${trendingData.count} reports about "${trendingData.type}" in your area`,
+      time: 'Today',
+      priority: 'info'
+    });
+  }
+  
+  // 5. ✅ New Pending Issues
+  const newIssues = serverIssues.filter(i => i.status === 'Pending').slice(-2).reverse();
+  newIssues.forEach(issue => {
+    allNotifications.push({
+      type: 'issue',
+      icon: '🚨',
+      message: `New issue reported: ${issue.title || 'Road issue'} near ${issue.type || 'your area'}`,
+      time: getTimeAgo(issue.id),
+      priority: 'warning'
+    });
+  });
+  
+  // Render notifications
+  displayNotifications();
+}
+
+// ✅ Display filtered notifications
+function displayNotifications() {
+  const notifList = document.getElementById('notifications-list');
+  
+  if (!notifList) return; // Safety check
+  
+  let filteredNotifications = allNotifications;
+  if (currentFilter !== 'all') {
+    filteredNotifications = allNotifications.filter(n => n.type === currentFilter);
+  }
+  
+  if (filteredNotifications.length === 0) {
+    notifList.innerHTML = '<li class="no-notifications">📭 No notifications in this category</li>';
+  } else {
+    notifList.innerHTML = filteredNotifications.map(notif => `
+      <li class="notification-item ${notif.priority}" data-type="${notif.type}">
+        <span class="notif-icon">${notif.icon}</span>
+        <div class="notif-content">
+          <div class="notif-message">${notif.message}</div>
+          <div class="notif-time">${notif.time}</div>
+        </div>
+        <button class="notif-dismiss" onclick="dismissNotif(this)">×</button>
+      </li>
+    `).join('');
+  }
+}
+
+// ✅ Weather Alerts Function (Smart time-based)
+function getWeatherAlerts() {
+  const alerts = [];
+  const now = new Date();
+  const hour = now.getHours();
+  const month = now.getMonth(); // 0-11
+  
+  // Evening rain alert (4 PM - 8 PM)
+  if (hour >= 16 && hour <= 20) {
+    alerts.push({
+      type: 'weather',
+      icon: '🌧️',
+      message: 'Weather Alert: Moderate rain expected between 6-9 PM. Drive carefully!',
+      time: 'Just now',
+      priority: 'warning'
+    });
+  }
+  
+  // Morning fog alert (6 AM - 9 AM, winter months: Nov, Dec, Jan, Feb)
+  if (hour >= 6 && hour <= 9 && (month >= 10 || month <= 1)) {
+    alerts.push({
+      type: 'weather',
+      icon: '🌫️',
+      message: 'Weather Alert: Dense fog in your area. Reduced visibility on highways.',
+      time: '30 min ago',
+      priority: 'info'
+    });
+  }
+  
+  // Hot weather alert (11 AM - 3 PM, summer months: Apr, May, Jun)
+  if (hour >= 11 && hour <= 15 && month >= 3 && month <= 5) {
+    alerts.push({
+      type: 'weather',
+      icon: '☀️',
+      message: 'Weather Alert: High temperature today (38°C). Stay hydrated and avoid peak hours.',
+      time: '1 hour ago',
+      priority: 'warning'
+    });
+  }
+  
+  return alerts;
+}
+
+// ✅ Get most reported issue type
+function getMostReportedIssue(issues) {
+  if (!issues || issues.length === 0) return null;
+  
+  const typeCounts = {};
+  issues.forEach(issue => {
+    const type = issue.type || 'Other';
+    typeCounts[type] = (typeCounts[type] || 0) + 1;
+  });
+  
+  const entries = Object.entries(typeCounts);
+  if (entries.length === 0) return null;
+  
+  const mostCommon = entries.sort((a, b) => b[1] - a[1])[0];
+  return { type: mostCommon[0], count: mostCommon[1] };
+}
+
+// ✅ Calculate time ago from timestamp
+function getTimeAgo(timestamp) {
+  if (!timestamp) return 'Recently';
+  
+  const now = Date.now();
+  const diff = now - timestamp;
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  
+  if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
+  if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+  if (minutes > 0) return `${minutes} min${minutes > 1 ? 's' : ''} ago`;
+  return 'Just now';
+}
+
+// ✅ Filter notifications by type
+function filterNotifications(type) {
+  currentFilter = type;
+  
+  // Update active filter button
+  const filters = document.querySelectorAll('.notif-filter');
+  filters.forEach(btn => btn.classList.remove('active'));
+  
+  // Find the button that was clicked
+  filters.forEach(btn => {
+    const btnText = btn.textContent.toLowerCase();
+    if (btnText.includes(type) || (type === 'all' && btnText === 'all')) {
+      btn.classList.add('active');
+    }
+  });
+  
+  displayNotifications();
+}
+
+// ✅ Dismiss notification
+function dismissNotif(button) {
+  const notifItem = button.parentElement;
+  if (notifItem) {
+    notifItem.style.animation = 'fadeOut 0.3s';
+    setTimeout(() => notifItem.remove(), 300);
+  }
+}
+
+// ✅ Auto-refresh notifications every 30 seconds (only when viewing notifications)
+setInterval(() => {
+  const notifySection = document.getElementById('section-notify');
+  if (notifySection && notifySection.classList.contains('active')) {
+    renderNotifications();
+  }
+}, 30000);
+
+// --- HEATMAP MODULE ---
+// Map each issue type to checkbox IDs
+const issueTypeCheckboxes = {
+  "Pothole": "ht-pothole",
+  "Waterlogging": "ht-waterlogging",
+  "Unpaved": "ht-unpaved",
+  "Accident": "ht-accident",
+  "Garbage": "ht-garbage",
+  "Streetlight": "ht-streetlight",
+  "Road Obstruction": "ht-roadobstruction",
+  "Other": "ht-other"
+};
+
+window.heatMap = null;
+
+// Get array of selected types
+function getActiveIssueTypes() {
+  return Object.entries(issueTypeCheckboxes)
+    .filter(([type, id]) => document.getElementById(id) && document.getElementById(id).checked)
+    .map(([type]) => type);
+}
+
+async function renderHeatmap() {
+  const container = document.getElementById("leaflet-heatmap");
+  // Reset container (avoids map being invisible after reloads/updates)
+  container.innerHTML = "";
+  if (window.heatMap && window.heatMap.remove) {
+    window.heatMap.off();
+    window.heatMap.remove();
+  }
+
+  // Center on Bangalore by default
+  window.heatMap = L.map(container).setView([12.9716, 77.5946], 12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19}).addTo(window.heatMap);
+
+  // Fetch live issues from backend
+  let issuesData = [];
+  try {
+    const res = await fetch("http://localhost:3300/api/reports");
+    issuesData = await res.json();
+  } catch (e) {
+    issuesData = [];
+  }
+
+  // Check active types
+  const types = getActiveIssueTypes();
+
+  // Map and filter: only those with real coordinates and type ticked
+  const points = issuesData
+    .filter(i => i.lat && i.lng && !isNaN(i.lat) && !isNaN(i.lng) && types.includes(i.type))
+    .map(i => [parseFloat(i.lat), parseFloat(i.lng), 0.7]); // 0.7 = intensity
+
+  L.heatLayer(points, {
+    minOpacity: 0.5,
+    max: 1.0,
+    radius: 28,
+    blur: 20,
+    gradient: {0.1:"blue",0.3:"green",0.5:"yellow",0.7:"orange",1.0:"red"}
+  }).addTo(window.heatMap);
+}
+
+// --- Attach event listeners to checkboxes ---
+Object.values(issueTypeCheckboxes).forEach(id => {
+  let cb = document.getElementById(id);
+  if(cb) cb.onchange = renderHeatmap;
+});
+
+// --- Make sure to call renderHeatmap() on page load ---
+window.addEventListener('DOMContentLoaded', renderHeatmap);
+
+//community section
+// Example user data (in real: fetch from backend)
+const communityUser = {
+  photo: "default.png", // or user profile photo url
+  name: "Nandan",
+  email: "nandan@gmail.com",
+  dob: "2000-01-01"
+};
+
+window.addEventListener('DOMContentLoaded', () => {
+  // Fill Profile details
+  document.getElementById('community-profile-photo').src = communityUser.photo;
+  document.getElementById('community-profile-name').textContent = communityUser.name;
+  document.getElementById('community-profile-email').textContent = communityUser.email;
+  document.getElementById('community-profile-dob').textContent = "DOB: " + communityUser.dob;
+
+  // Handle Tabs
+  const tabBtns = document.querySelectorAll('.comm-tab-btn');
+  let lastActive = tabBtns[0];
+  tabBtns.forEach((btn, idx) => {
+    btn.onclick = () => {
+      if(lastActive) lastActive.classList.remove('active');
+      btn.classList.add('active');
+      lastActive = btn;
+      // Load content step by step; for now just demo
+      document.getElementById('community-tab-contents').innerHTML = `<div style="color:#ffd357;font-size:1.06em;">
+        You clicked <b>${btn.textContent}</b> (feature to be built next step).
+      </div>`;
+    };
+  });
+});
+
+
+window.onload = function () {
+  loadIssuesFromServer();
+  loadCommunity();
+  initReportMap();
+  renderLiveMap();
+ // renderIssuesTable();
+  
+  renderProfile();
+  initMap();
+  renderNotifications();
+};
+
+
+
+
+// Auto-hide login if already logged in
+
+</script>
+</body>
+</html>
